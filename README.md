@@ -714,3 +714,481 @@ void init_all() {
 
 }
 ```
+Шаблонная функция **getAndRemoveRandomFromVector** возвращает случайный элемент из любого вектора и удаляет его в векторе:
+```c++
+template<typename T>
+T getAndRemoveRandomFromVector(vector<T>& vec) {
+    T t0;
+    if (vec.empty()) return t0;
+    int index = rand() % vec.size();
+    t0 = vec[index];
+    vec.erase(vec.begin() + index);
+    return t0;
+}
+```
+В перечислении **e** обозначены типы элементов, класс **el** - общий для всех элементов, позволяет напечатать информацию об элементе каждого типа:
+```c++
+// Перечисление типов элементов UI
+enum e { button, checkbox, list, str, polosa, caption, graphic, graphicd, polosa_out };
+
+// Класс el (элемент пользовательского интерфейса)
+class el {
+public:
+    String name;
+    vector<String> subs;     // Подчинённые элементы
+    String action;           // Действие
+    String when;             // Когда выполнять
+    e type;                  // Тип элемента
+    int is_out = 0;          // Является ли выходным параметром
+    int in_end = 0;          // Переносить в конец
+    double maxTime = 0;
+    double maxParam = 0;
+    vector<String> params;   // Передаваемые параметры
+    vector<String> zn;       // Значения для списков
+    vector<String> kods;     // Коды для значений
+    double min = 0;
+    double max = 100;
+    double step = 1;
+    
+    String value; // Значение
+    String firstValue; // Значение по умолчанию
+    el() {}
+
+    void print() {
+        Serial.print(" ● ");
+        switch (type) {
+            case button: {
+                String s = name + " " + "Кнопка" + " " + action;
+                for (int i=0; i<subs.size(); i++) {
+                    s += " " + String(subs[i].c_str());
+                }
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case str: {
+                String s = name + " Строка " + action + (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case checkbox: {
+                String s = name + " " + "Флажок" + " " + action + " " + when;
+                for (int i=0; i<subs.size(); i++) {
+                    s += " " + String(subs[i].c_str());
+                }
+                s +=  (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case caption: {
+                String s = "out " + name + " Надпись " + when +  (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case list: {
+                String s = name + " " + "Список" + " " + action + " " + when;
+                for (int i=0; i<zn.size(); i++) {
+                    s += " " + String(zn[i].c_str());
+                    if (action == "ЗначениеКод" && i<kods.size()) s += " " + String(kods[i].c_str());
+                }
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case polosa: {
+                String s = name + " ПолосаПрокрутки " + "Мин " + String(min) + " Макс " + String(max) + " Шаг " + String(step) + " " + when;
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case polosa_out: {
+                String s = "out " + name + " ПолосаПрокрутки " + "Мин " + String(min) + " Макс " + String(max) + " Шаг " + String(step) + " " + when;
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case graphic: {
+                String s = "out " + name + " " + "График" + " " + when + " " + "МаксВремя " + String(maxTime) + " " + "МаксПарам " + String(maxParam) + " Параметры";
+                for (int i=0; i<subs.size(); i++) {
+                    s += " " + String(subs[i].c_str());
+                }
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            case graphicd: {
+                String s = "out " + name + " " + "ДГрафик" + " " + when + " " + "МаксПарам " + String(maxParam) + " Параметры";
+                for (int i=0; i<subs.size(); i++) {
+                    s += " " + String(subs[i].c_str());
+                }
+                s += (in_end ? " end" : "");
+                Serial.println(s);
+                client.println(s);
+                break;
+            }
+            default:
+                Serial.println("Неизвестный тип элемента");
+        }
+    }
+};
+```
+Класс **group** позволяет создавать группы разнотипных элементов:
+```c++
+class group {
+public:
+    vector<el> elements;
+
+    void print() {
+        for (int i=0; i<elements.size(); i++) {
+            elements[i].print();
+        }
+    }
+};
+```
+Функция **start_stop** возвращает группу из элементов кнопок старт и стоп:
+```c++
+group start_stop() {
+    vector<el> elements;
+    el temp;
+    temp.type = e::button;
+    temp.name = "Старт";
+    temp.action = "НачалоПроцесса";
+    temp.in_end = 1;
+    elements.push_back(temp);
+
+    el temp2;
+    temp2.type = e::button;
+    temp2.name = "Стоп";
+    temp2.action = "ПрерываниеПроцесса";
+    temp2.in_end = 1;
+    elements.push_back(temp2);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **strcommand** возвращает группу из элементов строки ввода команды и кнопки её отправки:
+```c++
+group strcommand() {
+    vector<el> elements;
+    el temp;
+    temp.type = e::str;
+    temp.name = "Команда";
+    temp.action = "Команда";
+    temp.in_end = 1;
+    elements.push_back(temp);
+
+    el temp2;
+    temp2.type = e::button;
+    temp2.name = "Выполнить";
+    temp2.action = "ОтправкаКомандыИзСтроки";
+    temp2.subs.push_back(temp.name);
+    temp2.in_end = 1;
+    elements.push_back(temp2);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **flagmoment** возвращает группу из элементов флажка и соответсвующей ему выходной надписи, передающейся моментально:
+```c++
+group flagmoment(int i) {
+    CB cb0 = getAndRemoveRandomFromVector(cbOptions);
+    String s = cb0.name;
+    vector<el> elements;
+
+    el temp;
+    temp.type = e::caption;
+    temp.name = "Состояние_параметра_" + s;
+    temp.when = "Постоянно";
+    temp.is_out = 1;
+    temp.subs = cb0.options;
+
+    el temp2;
+    temp2.type = e::checkbox;
+    temp2.name = s;
+    temp2.action = "БинарноеУправление";
+    temp2.when = "Моментально";
+    temp2.subs.push_back(temp.name);
+
+    temp.firstValue = cb0.options[1];
+    temp2.firstValue = cb0.options[1];
+    elements.push_back(temp);
+    elements.push_back(temp2);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **flagafter** возвращает группу из элементов флажка и соответсвующей ему выходной надписи, передающейся по старту:
+```c++
+group flagafter(int i) {
+    CB cb0 = getAndRemoveRandomFromVector(cbOptions);
+    String s = cb0.name;
+    vector<el> elements;
+
+    el temp;
+    temp.type = e::caption;
+    temp.name = "Состояние_параметра_" + s;
+    temp.when = "ВПроцессе";
+    temp.is_out = 1;
+    temp.subs = cb0.options;
+
+    el temp2;
+    temp2.type = e::checkbox;
+    temp2.name = s;
+    temp2.action = "БинарноеУправление";
+    temp2.when = "ПоСтарту";
+    temp2.subs.push_back(temp.name);
+    temp.firstValue = cb0.options[1];
+    temp2.firstValue = cb0.options[1];
+
+    elements.push_back(temp);
+    elements.push_back(temp2);
+
+    
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **onecaption** возвращает группу из элемента неподчинённой выходной надписи:
+```c++
+group onecaption(int i) {
+    OutString os = getAndRemoveRandomFromVector(outStrings);
+    String s = os.label;
+    vector<el> elements;
+    el temp;
+    temp.type = e::caption;
+    temp.name = s;
+    temp.subs = os.vars;
+    int j = rand() % 3;
+    if (j == 0) temp.when = "Постоянно";
+    else if (j == 1) temp.when = "ВПроцессе";
+    else if (j == 2) temp.when = "ВКонце";
+
+    temp.is_out = 1;
+    elements.push_back(temp);
+
+    temp.firstValue = os.vars[0];
+    
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **listmoment** возвращает группу из элементов списка и подчиняющейся ему надписи, передающихся моментально:
+```c++
+group listmoment(int i) {
+    String firstValue = "";
+    List l = getAndRemoveRandomFromVector(lists);
+    String s = l.name;
+    vector<el> elements;
+    el temp;
+    temp.type = e::caption;
+    temp.name = "Состояние_параметра_" + s;
+    temp.when = "Постоянно";
+    temp.is_out = 1;
+
+    el temp2;
+    temp2.type = e::list;
+    temp2.name = s;
+
+    int t = rand() % 2;
+    int k = rand() % 9 + 2;
+    temp2.zn = l.options;
+    if (t == 0) {
+        temp2.action = "Значение";
+        firstValue = l.options[0];
+    } else {
+        temp2.action = "ЗначениеКод";
+        for (int j=1; j<=temp2.zn.size(); j++) {
+            int kod = round(rand() % 1000);
+            temp2.kods.push_back(String(kod));
+        }
+        firstValue = temp2.kods[0];
+    }
+    temp2.when = "Моментально";
+    temp2.subs.push_back(temp.name);
+
+    temp.firstValue = firstValue;
+    temp2.firstValue = firstValue;
+    elements.push_back(temp);
+    elements.push_back(temp2);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+
+```
+Функция **listafter** возвращает группу из элементов списка и подчиняющейся ему надписи, передающихся по старту:
+```c++
+group listafter(int i) {
+    String firstValue = "";
+    List l = getAndRemoveRandomFromVector(lists);
+    String s = l.name;
+    vector<el> elements;
+    el temp;
+    temp.type = e::caption;
+    temp.name = "Состояние_параметра_" + s;
+    temp.when = "Постоянно";
+    temp.is_out = 1;
+
+    el temp2;
+    temp2.type = e::list;
+    temp2.name = s;
+
+    int t = rand() % 2;
+    int k = rand() % 9 + 2;
+    temp2.zn = l.options;
+    if (t == 0) {
+        temp2.action = "Значение";
+        firstValue = l.options[0];
+    } else {
+        temp2.action = "ЗначениеКод";
+        for (int j=1; j<=temp2.zn.size(); j++) {
+            int kod = round(rand() % 1000);
+            temp2.kods.push_back(String(kod));
+        }
+        firstValue = temp2.kods[0];
+    }
+    temp2.when = "ПоСтарту";
+    temp2.subs.push_back(temp.name);
+    temp.firstValue = firstValue;
+    temp2.firstValue = firstValue;
+    elements.push_back(temp);
+    elements.push_back(temp2);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **nullparams** возвращает группу с кнопкой сброса параметров до значений по умолчания:
+```c++
+group nullparams() {
+    vector<el> elements;
+    el temp;
+    temp.type = e::button;
+    temp.name = "Сброс_параметров";
+    temp.action = "ПараметрыПоУмолчанию";
+    elements.push_back(temp);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **newpolosa** возвращает группу с полосой прокрутки:
+```c++
+group newpolosa(int i) {
+    Polosa p = getAndRemoveRandomFromVector(polosas);
+    String s = p.name;
+    vector<el> elements;
+    el temp;
+
+    int t = rand() % 5;
+    if (t > 0) {
+        temp.name = s;
+        temp.type = e::polosa;
+        if (rand() % 2 == 0)
+            temp.when = "Моментально";
+        else
+            temp.when = "ПоСтарту";
+    } else {
+        temp.name = "Состояние_параметра_" + s;
+        temp.type = e::polosa_out;
+        temp.is_out = 1;
+        int t2 = rand() % 3;
+        if (t2 == 0) temp.when = "Постоянно";
+        else if (t2 == 1) temp.when = "ВПроцессе";
+        else temp.when = "ВКонце";
+    }
+    temp.min = p.min_val;
+    temp.max = p.max_val;
+    temp.step = p.step;
+    
+    temp.firstValue = String(temp.min);
+
+    elements.push_back(temp);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **newgraphic** возвращает группу с элементом графика:
+```c++
+group newgraphic(vector<el> els, int i, int n) {
+    Graph g0 = getAndRemoveRandomFromVector(graphs);
+    String s = g0.name;
+    vector<el> elements;
+    el temp;
+    temp.type = e::graphic;
+    temp.name = s;
+    temp.is_out = 1;
+    if (n == 1)
+        temp.when = "Постоянно";
+    else
+        temp.when = "ВПроцессе";
+
+    int maxVal = 0;
+    for (int j = 0; j < els.size(); j++) {
+        if (els[j].max > maxVal) maxVal = els[j].max;
+    }
+    temp.maxParam = maxVal;
+    temp.maxTime = 5 + rand() % 16;
+
+    for (int j=0; j<els.size(); j++) {
+        temp.subs.push_back(els[j].name);
+    }
+
+    elements.push_back(temp);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+```
+Функция **newDgraphic** возвращает группу с элементом графика, с изменяющимся диапазоном длины окна:
+```c++
+group newDgraphic(vector<el> els, int i) {
+    Graph g0 = getAndRemoveRandomFromVector(graphs);
+    String s = g0.name;
+    vector<el> elements;
+    el temp;
+    temp.type = e::graphicd;
+    temp.name = s;
+    temp.when = "ВПроцессе";
+    temp.is_out = 1;
+
+    int maxVal = 0;
+    for (int j=0; j<els.size(); j++) {
+        if (els[j].max > maxVal) maxVal = els[j].max;
+    }
+    temp.maxParam = maxVal;
+
+    for (int j=0; j<els.size(); j++) {
+        temp.subs.push_back(els[j].name);
+    }
+
+    elements.push_back(temp);
+
+    group g;
+    g.elements = elements;
+    return g;
+}
+
+```
