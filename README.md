@@ -184,3 +184,533 @@ private:
 // Создаём глобальный объект
 vector<SystemController> systemControllers;
 ```
+Функции **replaceSpaces** и **replaceSpacesVector** заменяют пробелы на нижние подчёркивания в строке и векторе строк соответственно:
+```c++
+// Замещение пробелов на '_'
+String replaceSpaces(String input) {
+  for (int i = 0; i < input.length(); i++) {
+    if (input.charAt(i) == ' ') {
+      input.setCharAt(i, '_');
+    }
+  }
+  return input;
+}
+
+// Вторая функция: применяет первую ко всем строкам в векторе
+vector<String> replaceSpacesVector(vector<String> input) {
+    for (int i = 0; i < input.size(); i++) {
+        input[i] = replaceSpaces(input[i]);
+    }
+    return input;
+}
+```
+Класс **CB** нужен для хранения информации об элементе флажка (checkbox):
+```c++
+class CB {
+public:
+    String name;
+    vector<String> options;
+
+    CB() {}
+    CB(const String& n, const vector<String>& opts) : name(replaceSpaces(n)), options(replaceSpacesVector(opts)) {}
+};
+```
+Класс **List** нужен для хранения информации об элементе списка:
+```c++
+class List {
+public:
+    String name;
+    vector<String> options;
+
+    List() {}
+    List(const String& name0, const vector<String>& options0)
+        : name(replaceSpaces(name0)), options(replaceSpacesVector(options0)) {}
+};
+```
+Класс **Polosa** нужен для хранения информации об элементе полосы прокрутки:
+```c++
+class Polosa {
+public:
+    String name;
+    double min_val;
+    double max_val;
+    double step;
+
+    Polosa() {}
+    Polosa(const String& name0, double min0, double max0, double step0)
+        : name(replaceSpaces(name0)), min_val(min0), max_val(max0), step(step0) {}
+};
+```
+Класс **OutString** нужен для хранения информации об элементе надписи (выходной строки:
+```c++
+class OutString {
+public:
+    String label;
+    vector<String> vars;
+
+    OutString() {}
+    OutString(const String& label0, const vector<String>& vars0) : label(replaceSpaces(label0)), vars(replaceSpacesVector(vars0)) {}
+};
+```
+Класс **OutPolosa** нужен для хранения информации об элементе выходной полосы прокрутки:
+```c++
+class OutPolosa {
+public:
+    String name;
+    double min_val;
+    double max_val;
+    double step;
+
+    OutPolosa() {}
+    OutPolosa(const String& name0, double min0, double max0, double step0)
+        : name(replaceSpaces(name0)), min_val(min0), max_val(max0), step(step0) {}
+};
+```
+Класс **Graph** нужен для хранения информации об элементе графика:
+```c++
+class Graph {
+public:
+    String name;
+
+    Graph() {}
+    Graph(const String& name0)
+        : name(replaceSpaces(name0)) {}
+};
+```
+Далее создаются **векторы элементов** приведённых выше типов и в функции **init_all** происходит **заполнение** векторов значениями, которые будут использоваться для рандомайзера:
+```c++
+// Глобальные контейнеры
+vector<CB> cbOptions;
+vector<List> lists;
+vector<Polosa> polosas;
+vector<OutString> outStrings;
+vector<OutPolosa> outPolosas;
+vector<Graph> graphs;
+
+// Функция инициализации данных
+void init_all() {
+    // Инициализация генератора случайных чисел
+    // 0. CB - добавляем все названия
+    cbOptions.emplace_back("Светодиоды", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Вентилятор", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Обогреватель", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Звуковой сигнал", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Автоматический режим", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Режим энергосбережения", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Влагомер", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Датчик движения", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Камера", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Bluetooth", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Авторегулировка", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Ночной режим", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Зарядка", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Защита от замыканий", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Датчик температуры", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Избежание перезагрузки", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Инвертор", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Оптический датчик", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Защита воздушных потоков", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Контроль доступа", vector<String>{"Разрешен", "Запрещен"});
+    cbOptions.emplace_back("Функция уведомлений", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Автоблокировка", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Режим резервного питания", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Настройка времени", vector<String>{"Установлено", "Не установлено"});
+    cbOptions.emplace_back("Режим безопасности", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Виртуальный режим", vector<String>{"Активен", "Не активен"});
+    cbOptions.emplace_back("Обратная связь", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Функция отложенного запуска", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Режим обратного отсчета", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Параметр низкого режима", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Параметр высоких температур", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Системная проверка", vector<String>{"Активна", "Не активна"});
+    cbOptions.emplace_back("Параметр режима резервирования", vector<String>{"Активен", "Не активен"});
+    cbOptions.emplace_back("Система пожарозащиты", vector<String>{"Активна", "Не активна"});
+    cbOptions.emplace_back("Датчик задымлённости", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Режим таймера", vector<String>{"Активен", "Деактивен"});
+    cbOptions.emplace_back("Режим кондиционирования", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Автоматическая настройка", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Режим турбо", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Защита от перегрева", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Режим паролирования", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Функция автоматического сброса", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Режим настройки по времени", vector<String>{"Активен", "Не активен"});
+    cbOptions.emplace_back("Режим автоматического запуска", vector<String>{"Вкл", "Выкл"});
+    cbOptions.emplace_back("Обратная связь по сети", vector<String>{"Доступна", "Недоступна"});
+    cbOptions.emplace_back("Режим уменьшенного потребления", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Индикатор заряда", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Режим совместимости", vector<String>{"Включен", "Выключен"});
+    cbOptions.emplace_back("Функция автоматической дифференциации", vector<String>{"Включена", "Выключена"});
+    cbOptions.emplace_back("Режим интеллектуального управления", vector<String>{"Включен", "Выключен"});
+
+    
+
+    // 1. Списки
+    lists.emplace_back("Тип устройства", vector<String>{
+        "Датчик", "Актуатор", "Контроллер", "Камера", "Процессор", "Дисплей", "Блок питания", 
+        "Модуль связи", "Мотор", "Регенератор", "Терморегулятор", "Сенсор", "Реле", 
+        "Преобразователь", "Модуль хранения", "Модуль питания", "Блок управления", "Кнопка", 
+        "Датчик давления", "Батарея"});
+    lists.emplace_back("Режим отображения", vector<String>{
+        "Темный", "Светлый", "Авто", "Инверсия", "Режим чтения", "Режим кино", "Режим энергосбережения",
+        "Фото", "День", "Ночь", "Дисплей на улице", "Дисплей внутри", "Режим обучения", 
+        "Режим ожидания", "Тест", "Обновление", "Режим показа", "Режим редактирования", "Режим демонстрации"});
+    lists.emplace_back("Канал передачи данных", vector<String>{
+        "Канал 1", "Канал 2", "Канал 3", "Канал 4", "Канал 5"});
+    lists.emplace_back("Тип сообщения", vector<String>{
+        "Текст", "Аудио", "Видео", "Команда", "Уведомление", "Лог", "Ошибка"});
+    lists.emplace_back("Тип пользователя", vector<String>{
+        "Гость", "Пользователь", "Администратор", "Модератор", "Разработчик"});
+    lists.emplace_back("Тип уведомлений", vector<String>{
+        "Всплывающее окно", "Звук", "Вибрация", "E-mail", "СМС", "push-уведомления"});
+    lists.emplace_back("Режим обработки данных", vector<String>{
+        "Реальный", "Тест", "Обучение", "Демонстрация", "Имитированный"});
+    lists.emplace_back("Тип сенсора", vector<String>{
+        "Оптический лазерный", "Индуктивный", "Магниторезистивный", "Ультразвуковой", "Тепловой"
+    });
+    lists.emplace_back("Тип двигателя", vector<String>{
+        "Электрический", "Дизельный", "Гибридный", "Гидравлический", "Пневматический"
+    });
+    lists.emplace_back("Режим отображения", vector<String>{
+        "Темный", "Светлый", "Авто", "Режим уроков", "Экспертный"
+    });
+    lists.emplace_back("Тип системы связи", vector<String>{
+        "Wi-Fi", "LTE", "Bluetooth", "Радиосвязь", "Ethernet"
+    });
+    lists.emplace_back("Тип управления", vector<String>{
+        "Покадровое", "Голосовое", "Жестовое", "Автоматическое", "Ручное"
+    });
+    lists.emplace_back("Тип датчика урожая", vector<String>{
+        "Оптический", "Ультразвуковой", "Гравитационный", "Магнитный", "Инфракрасный"
+    });
+    lists.emplace_back("Режим мониторинга", vector<String>{
+        "Реальный", "Тестовый", "Обучающий", "Демонстрационный", "Исторический"
+    });
+    lists.emplace_back("Тип панели управления", vector<String>{
+        "Сенсорная", "Комбинированная", "Кнопочная", "Механическая", "Виртуальная"
+    });
+    lists.emplace_back("Тип системы охлаждения", vector<String>{
+        "Воздушное", "Жидкостное", "Газовое", "Гибридное", "Компрессионное"
+    });
+    lists.emplace_back("Тип системы питания", vector<String>{
+        "Основное", "Резервное", "Солнечное", "Автоматическое", "Портативное"
+    });
+    lists.emplace_back("Режим обработки данных", vector<String>{
+        "Автоматический", "Ручной", "По расписанию", "Реальный", "Обучающий"
+    });
+    lists.emplace_back("Тип системы навигации", vector<String>{
+        "GPS", "ГЛОНАСС", "Гибридная", "Инфракрасная", "Лидар"
+    });
+    lists.emplace_back("Тип системы фильтрации", vector<String>{
+        "Механическая", "Электростатическая", "Магнитная", "Пневматическая", "Вакуумная"
+    });
+    lists.emplace_back("Режим калибровки", vector<String>{
+        "Автоматическая", "Ручная", "Плановая", "На основе подсказок", "Реактивная"
+    });
+    lists.emplace_back("Тип системы звукового оповещения", vector<String>{
+        "Зуммер", "Громкоговоритель", "Вибрация", "Интерком", "Мигалка"
+    });
+    lists.emplace_back("Тип системы отображения", vector<String>{
+        "Проектор", "Дисплей", "Графическая панель", "Реальный экран", "Дисплей AR"
+    });
+    lists.emplace_back("Режим работы двигателя", vector<String>{
+        "Полевой", "Обслуживание", "Ремонт", "Тест", "Подзарядка"
+    });
+    lists.emplace_back("Тип системы безопасности", vector<String>{
+        "Шифрование", "Аутентификация", "Брандмауэр", "Резервные копии", "Обнаружение вторжений"
+    });
+    lists.emplace_back("Режим загрузки обновлений", vector<String>{
+        "Автоматический", "Ручной", "Запланированный", "Обучающий", "Экстренный"
+    });
+    lists.emplace_back("Тип системы мониторинга", vector<String>{
+        "Онлайн", "Оффлайн", "Интерактивный", "Автоматический", "Ручной"
+    });
+    lists.emplace_back("Тип системы коммуникации", vector<String>{
+        "Мобильная", "Кабельная", "Беспроводная", "Спутниковая", "Интерфейс IoT"
+    });
+    lists.emplace_back("Режим управления скоростью", vector<String>{
+        "Автоматический", "Ручной", "Гибкий", "Экстренный", "Ограниченный"
+    });
+    lists.emplace_back("Тип системы очистки", vector<String>{
+        "Механическая", "Пневматическая", "Магнитная", "Газовая", "Электростатическая"
+    });
+    lists.emplace_back("Режим защиты", vector<String>{
+        "Автоматическая", "Ручная", "Профилактическая", "Обучающая", "Антивирусная"
+    });
+    lists.emplace_back("Тип системы логирования", vector<String>{
+        "Локальный", "Облачный", "Гибридный", "Реальный", "Исторический"
+    });
+    lists.emplace_back("Режим сброса настроек", vector<String>{
+        "Автоматический", "Ручной", "По расписанию", "По событию", "Обратной связи"
+    });
+    lists.emplace_back("Тип системы адаптации", vector<String>{
+        "Искусственный интеллект", "Машинное обучение", "Генетические алгоритмы", "Реинфорсмент", "Байесовские сети"
+    });
+    lists.emplace_back("Тип системы безопасности данных", vector<String>{
+        "Шифрование AES", "Сертификаты SSL", "Двухфакторная аутентификация", "Бэкапы", "Ограничение доступа"
+    });
+    lists.emplace_back("Режим диагностики", vector<String>{
+        "Автоматическая", "Ручная", "Глубокая", "Поверхностная", "Реальная"
+    });
+    lists.emplace_back("Тип системы подачи топлива", vector<String>{
+        "Автоматическая", "Ручная", "Премиум", "Экономичная", "Регенерация"
+    });
+    lists.emplace_back("Режим работы в условиях плохой погоды", vector<String>{
+        "Погодостойкий", "Защищенный", "Автоматический", "Ручной", "Режим ожидания"
+    });
+    lists.emplace_back("Тип системы связи с оператором", vector<String>{
+        "Видеосвязь", "Аудиосвязь", "Чат", "Обратный звонок", "Сообщения"
+    });
+    lists.emplace_back("Режим тестового запуска", vector<String>{
+        "Реальный", "Имитационный", "Обучающий", "Минимальный", "Полнонедельный"
+    });
+    lists.emplace_back("Тип системы программного обеспечения", vector<String>{
+        "Встроенное", "Облачное", "Локальное", "Модульное", "Обновляемое"
+    });
+    lists.emplace_back("Режим загрузки программ", vector<String>{
+        "Автоматическая", "Ручная", "По расписанию"
+    });
+    lists.emplace_back("Тип системы охлаждения двигателя", vector<String>{
+        "Воздушное", "Жидкостное", "Газовое"
+    });
+    lists.emplace_back("Режим тестирования систем", vector<String>{
+        "Полный цикл", "Минимальный", "Диагностический", "Параллельный"
+    });
+    lists.emplace_back("Тип системы питания", vector<String>{
+        "Бензиновая", "Электрическая", "Комбинированная"
+    });
+    lists.emplace_back("Режим обучения оператора", vector<String>{
+        "Автоматический", "Ручной", "Интерактивный"
+    });
+    lists.emplace_back("Тип системы навигации", vector<String>{
+        "Геопозиционирование", "Инфракрасная", "Лидар"
+    });
+    lists.emplace_back("Режим комплексной диагностики", vector<String>{
+        "Автоматический", "Ручной", "Реальный"
+    });
+    lists.emplace_back("Тип системы автоматического управления", vector<String>{
+        "Искусственный интеллект", "Машинное обучение", "Правила и сценарии"
+    });
+    lists.emplace_back("Режим восстановления системы", vector<String>{
+        "Автоматический", "Ручной", "Режим резервного копирования"
+    });
+
+
+
+    // 2. Полосы прокрутки
+    polosas.emplace_back("Настройка уровня звука уведомлений, %", 0, 100, 1);
+    polosas.emplace_back("Мощность нагрева, кВт", 0.1, 10, 0.1);
+    polosas.emplace_back("Скорость подачи материала, кг/ч", 0, 200, 1);
+    polosas.emplace_back("Объем копии, л", 0.1, 10, 0.1);
+    polosas.emplace_back("Настройка режима вибрации, Гц", 0, 500, 5);
+    polosas.emplace_back("Длина сегмента, м", 0.5, 100, 0.5);
+    polosas.emplace_back("Режим работы привода, номер", 1, 5, 1);
+    polosas.emplace_back("Интенсивность ультрафиолетового излучения, мВт/м²", 0, 300, 5);
+    polosas.emplace_back("Частота циклона, Гц", 0, 2000, 20);
+    polosas.emplace_back("Параметр охлаждающей жидкости, °C", 10, 50, 1);
+    polosas.emplace_back("Коэффициент сжатия, ед", 5, 20, 1);
+    polosas.emplace_back("Количество ступеней фильтрации, шт", 1, 5, 1);
+    polosas.emplace_back("Настройка времени задержки, мс", 0, 1000, 10);
+    polosas.emplace_back("Кол-во оборотов, об/мин", 0, 3000, 50);
+    polosas.emplace_back("Источники питания, число", 1, 4, 1);
+    polosas.emplace_back("Режим интенсивной работы, переключатель", 0, 1, 1);
+    polosas.emplace_back("Время перехода, сек", 1, 60, 1);
+    polosas.emplace_back("Температура датчика, °C", -20, 80, 1);
+    polosas.emplace_back("Объем газа, м³", 0.1, 10, 0.1);
+    polosas.emplace_back("Настройка уровня шума, дБ", 50, 100, 1);
+    polosas.emplace_back("Позиция компонента, мм", 0, 500, 1);
+    polosas.emplace_back("Нагрузочная амплитуда, мм", 0, 5, 0.1);
+    polosas.emplace_back("Настройка режима поляризации, номер", 1, 3, 1);
+    polosas.emplace_back("Количество циклов, шт", 1, 50, 1);
+    polosas.emplace_back("Длительность обработочного цикла, сек", 10, 600, 10);
+    polosas.emplace_back("Параметр фокусировки, мм", 100, 1000, 10);
+    polosas.emplace_back("Объем используемой жидкости, мл", 50, 1000, 50);
+    polosas.emplace_back("Параметр светового излучения, мВт/м²", 0, 1000, 10);
+    polosas.emplace_back("Настройка чувствительности сенсора, ед", 0, 100, 1);
+    polosas.emplace_back("Длина волны, нм", 400, 700, 10);
+    polosas.emplace_back("Степень выхода, %", 0, 100, 1);
+    polosas.emplace_back("Время активации, сек", 1, 300, 1);
+    polosas.emplace_back("Параметр диаметра, мм", 1, 20, 0.1);
+    polosas.emplace_back("Интенсивность электромагнитного поля, мТл", 0, 50, 1);
+    polosas.emplace_back("Объем воска, мл", 1, 100, 1);
+    polosas.emplace_back("Длина установки, м", 0.5, 10, 0.5);
+    polosas.emplace_back("Линейный коэффициент, ед", 1, 10, 1);
+    polosas.emplace_back("Настройка скорости пылесоса, об/мин", 0, 1500, 50);
+    polosas.emplace_back("Параметр времени наладки, сек", 1, 300, 1);
+    polosas.emplace_back("Параметр мощности вентилятора, Вт", 50, 3000, 50);
+    polosas.emplace_back("Высота позиционирования, мм", 0, 1000, 10);
+    polosas.emplace_back("Длина волны цвета, нм", 400, 700, 10);
+    polosas.emplace_back("Время обработки, мин", 1, 180, 1);
+    polosas.emplace_back("Параметр циклического режима, №", 1, 10, 1);
+    polosas.emplace_back("Уровень защиты от пыли, %", 0, 100, 1);
+    polosas.emplace_back("Настройка интенсивности вибрации, м/с²", 0, 20, 0.5);
+    polosas.emplace_back("Настройка частоты импульсов, Гц", 1, 2000, 50);
+    polosas.emplace_back("Объем контейнера, л", 0.5, 50, 1);
+    polosas.emplace_back("Параметр уровня электромагнитного излучения, мВт/м²", 0, 500, 10);
+    polosas.emplace_back("Время работы нагревателя, сек", 10, 3600, 60);
+
+
+    
+    // 3. Выводимые строки - название параметра и варианты описания (должно быть несколько)
+    // СОЗДАТЬ 50 уникальных записей
+    outStrings.emplace_back("Тип смазочного масла", vector<String>{"Минеральное", "Полностью синтетическое", "Полусинтетическое"});
+    outStrings.emplace_back("Максимальная скорость подачи, мм/мин", vector<String>{"100", "200", "300", "400"});
+    outStrings.emplace_back("Тип охлаждающей жидкости", vector<String>{"Антифриз", "Дистиллированная вода", "Минеральная вода"});
+    outStrings.emplace_back("Класс точности сборки", vector<String>{"Класс А", "Класс Б", "Класс В"});
+    outStrings.emplace_back("Режим работы станка", vector<String>{"Автоматический", "Полуавтоматический", "Ручной"});
+    outStrings.emplace_back("Толщина пластин", vector<String>{"0.5 мм", "1 мм", "2 мм"});
+    outStrings.emplace_back("Тип привода", vector<String>{"Электрический", "Гидравлический", "Пневматический"});
+    outStrings.emplace_back("Степень износа детали", vector<String>{"Новая", "Значительная изношенность", "Средняя изношенность"});
+    outStrings.emplace_back("Температурный режим обработки", vector<String>{"Низкотемпературный", "Нормальный", "Высокотемпературный"});
+    outStrings.emplace_back("Тип резцедержателя", vector<String>{"Цилиндрический", "Кегельный", "Патронный"});
+    outStrings.emplace_back("Диаметр вращающейся детали, мм", vector<String>{"50", "100", "150", "200"});
+    outStrings.emplace_back("Форма профиля", vector<String>{"Круглый", "Квадратный", "Многоугольный"});
+    outStrings.emplace_back("Толщина слоя нанесения, мм", vector<String>{"0.1", "0.5", "1"});
+    outStrings.emplace_back("Тип инструмента", vector<String>{"Фреза", "Торцевая", "Фреза с пластиковой вставкой"});
+    outStrings.emplace_back("Длина шпинделя, мм", vector<String>{"50", "100", "150"});
+    outStrings.emplace_back("Параметр точности позиционирования", vector<String>{"0.01 мм", "0.05 мм", "0.1 мм"});
+    outStrings.emplace_back("Степень автоматизации", vector<String>{"Нет автоматизации", "Частичная", "Полная"});
+    outStrings.emplace_back("Тип соединения деталей", vector<String>{"Сварка", "Клёпка", "Механическое соединение"});
+    outStrings.emplace_back("Максимальный крутящий момент, Нм", vector<String>{"50", "100", "150", "200"});
+    outStrings.emplace_back("Тип рабочего стола", vector<String>{"Вибрационный", "Поворотный", "Статичный"});
+    outStrings.emplace_back("Контроль зазорных расстояний", vector<String>{"Автоматический", "Ручной"});
+    outStrings.emplace_back("Энергопотребление станка, кВт", vector<String>{"1 кВт", "2 кВт", "3 кВт"});
+    outStrings.emplace_back("Диапазон регулировки скорости, об/мин", vector<String>{"0-500", "0-1000", "0-1500"});
+    outStrings.emplace_back("Тип системы управления", vector<String>{"ЧПУ", "Механическая", "Пневматическая"});
+    outStrings.emplace_back("Тип датчика положения", vector<String>{"Оптический", "Индуктивный", "Конденсаторный"});
+    outStrings.emplace_back("Длина кабеля управления, м", vector<String>{"2", "5", "10"});
+    outStrings.emplace_back("Тип крепления инструмента", vector<String>{"Гайка", "Ключевой слот", "Пневмозажим"});
+    outStrings.emplace_back("Класс защиты электроприбора", vector<String>{"IP54", "IP65", "IP67"});
+    outStrings.emplace_back("Время работы без обслуживания, ч", vector<String>{"50", "100", "200"});
+    outStrings.emplace_back("Количество рабочих циклов ", vector<String>{"100", "500", "1000"});
+    outStrings.emplace_back("Тип покрытия детали", vector<String>{"Цинковое покрытие", "Анодирование", "Порошковая покраска"});
+    outStrings.emplace_back("Тип контроля качества", vector<String>{"Визуальный", "Лазерный", "Ультразвуковой"});
+    outStrings.emplace_back("Масса станка, кг", vector<String>{"500", "1000", "1500"});
+    outStrings.emplace_back("Высота установки, м", vector<String>{"1.5", "2.0", "2.5"});
+    outStrings.emplace_back("Калибровка инструмента", vector<String>{"Автоматическая", "Ручная"});
+    outStrings.emplace_back("Конструкция оправки", vector<String>{"Штифтовая", "Пазовая", "Клёпочная"});
+    outStrings.emplace_back("Тип тормозной системы", vector<String>{"Магнитная", "Гидравлическая", "Электромагнитная"});
+    outStrings.emplace_back("Максимальный размер детали, мм", vector<String>{"200", "500", "1000"});
+    outStrings.emplace_back("Контроль температуры в зоне обработки", vector<String>{"Обязательный", "Опциональный"});
+    outStrings.emplace_back("Тип рулонного материала", vector<String>{"Сталь", "Алюминий", "Медь"});
+    outStrings.emplace_back("Энергосберегающий режим", vector<String>{"Включен", "Выключен"});
+    outStrings.emplace_back("Тип привода подачи", vector<String>{"Ременной", "Зубчатый", "Гидравлический"});
+    outStrings.emplace_back("Объем автоматической смазки, мл", vector<String>{"50", "100", "150"});
+    outStrings.emplace_back("Параметр амплитуды вибрации, мм", vector<String>{"0.1", "0.5", "1.0"});
+    outStrings.emplace_back("Длина патрона, мм", vector<String>{"50", "75", "100"});
+    outStrings.emplace_back("Время охлаждения, мин", vector<String>{"1", "2", "5"});
+    outStrings.emplace_back("Размер резьбы, мм", vector<String>{"M6", "M10", "M20"});
+    outStrings.emplace_back("Степень автоматизации контроля", vector<String>{"Ручной", "Пошаговый", "Автоматический"});
+    outStrings.emplace_back("Тип подачи, шпиндель/планетарный", vector<String>{"Шпиндель", "Планетарный"});
+    outStrings.emplace_back("Режим регулировки скорости", vector<String>{"Плавный", "Шаговый"});
+
+
+
+    // 4. Выходные полосы
+    // СОздать 50 уникальных записи - название параметра, мин.знач (0), макс.знач(200), шаг(1), ЧИСЛА ЗАМЕНИТЬ
+    outPolosas.emplace_back("Яркость дисплея, %", 0, 100, 1);
+    outPolosas.emplace_back("Громкость, %", 0, 100, 1);
+    outPolosas.emplace_back("Температура в салоне, °C", 10, 30, 1);
+    outPolosas.emplace_back("Уровень масла, %", 0, 100, 1);
+    outPolosas.emplace_back("Давление воздуха, кПа", 80, 300, 10);
+    outPolosas.emplace_back("Скорость вентилятора, об/мин", 0, 5000, 100);
+    outPolosas.emplace_back("Уровень топлива, %", 0, 100, 1);
+    outPolosas.emplace_back("Скорость езды, км/ч", 0, 25, 0.5);
+    outPolosas.emplace_back("Диаметр шины, мм", 600, 2000, 50);
+    outPolosas.emplace_back("Длина жатки, м", 1, 15, 0.5);
+    outPolosas.emplace_back("Ширина обработки, м", 1, 12, 0.5);
+    outPolosas.emplace_back("Высота сцепки, м", 0.5, 3, 0.1);
+    outPolosas.emplace_back("Частота вращения, Гц", 0, 60, 1);
+    outPolosas.emplace_back("Интенсивность освещенности, люкс", 0, 100000, 1000);
+    outPolosas.emplace_back("Скорость работы, км/ч", 0, 40, 0.5);
+    outPolosas.emplace_back("Время работы, ч", 0, 24, 0.5);
+    outPolosas.emplace_back("Продолжительность цикла, мин", 1, 120, 1);
+    outPolosas.emplace_back("Магнитное поле, мТ", 0, 500, 10);
+    outPolosas.emplace_back("Мощность, кВт", 0, 100, 0.5);
+    outPolosas.emplace_back("Вибрация, м/с²", 0, 20, 0.2);
+    outPolosas.emplace_back("Текущий уровень, А", 0, 50, 1);
+    outPolosas.emplace_back("Потребление энергии, кВт-ч", 0, 50, 0.5);
+    outPolosas.emplace_back("Размер зерна, мм", 2, 12, 0.2);
+    outPolosas.emplace_back("Значение pH", 0, 14, 0.5);
+    outPolosas.emplace_back("Длина кабеля, м", 1, 100, 1);
+    outPolosas.emplace_back("Высота проема, м", 1, 5, 0.2);
+    outPolosas.emplace_back("Расход воды, л/мин", 0, 50, 1);
+    outPolosas.emplace_back("Высота уборки, м", 0.2, 2, 0.1);
+    outPolosas.emplace_back("Масса, кг", 50, 2000, 10);
+    outPolosas.emplace_back("Мощность датчика, Вт", 0, 10, 0.1);
+    outPolosas.emplace_back("Частота, Гц", 50, 60, 1);
+    outPolosas.emplace_back("Температура окружающей среды, °C", -50, 50, 5);
+    outPolosas.emplace_back("Время отклика, мс", 0, 100, 1);
+    outPolosas.emplace_back("Интенсивность шума, дБ", 0, 120, 1);
+    outPolosas.emplace_back("Количество импульсов, в минуту", 0, 300, 1);
+    outPolosas.emplace_back("Влажность воздуха, %", 0, 100, 1);
+    outPolosas.emplace_back("Длина кабеля датчика, м", 1, 10, 0.5);
+    outPolosas.emplace_back("Объем резервуара, л", 1, 500, 10);
+    outPolosas.emplace_back("Расход топлива, л/ч", 0, 20, 0.1);
+    outPolosas.emplace_back("Давление, бар", 0, 10, 0.2);
+    outPolosas.emplace_back("Потребляемая мощность, Вт", 10, 500, 10);
+    outPolosas.emplace_back("Время реакции, мс", 0, 500, 5);
+    outPolosas.emplace_back("Интенсивность пульсаций, Гц", 0, 1000, 10);
+    outPolosas.emplace_back("Длина волны, нм", 200, 800, 10);
+    outPolosas.emplace_back("Объем воздуха, м³/ч", 0, 20, 0.5);
+    outPolosas.emplace_back("Температура охлаждающей жидкости, °C", -30, 15, 5);
+    outPolosas.emplace_back("Электрическая мощность, кВт", 0, 50, 0.5);
+    outPolosas.emplace_back("Длительность цикла, сек", 1, 300, 5);
+    outPolosas.emplace_back("Степень сжатия", 5, 25, 1);
+    outPolosas.emplace_back("Длина кабеля питания, м", 1, 30, 1);
+
+    
+    // 5. Графики - просто разные абстрактные названия графиков
+    // 50 уникальных названий
+    graphs.emplace_back("График с ID 1739");
+    graphs.emplace_back("График с ID 48216");
+    graphs.emplace_back("График с ID 9054");
+    graphs.emplace_back("График с ID 26731");
+    graphs.emplace_back("График с ID 1048");
+    graphs.emplace_back("График с ID 559827");
+    graphs.emplace_back("График с ID 8342");
+    graphs.emplace_back("График с ID 62215");
+    graphs.emplace_back("График с ID 3917");
+    graphs.emplace_back("График с ID 14489");
+    graphs.emplace_back("График с ID 7824");
+    graphs.emplace_back("График с ID 51236");
+    graphs.emplace_back("График с ID 2891");
+    graphs.emplace_back("График с ID 90173");
+    graphs.emplace_back("График с ID 46721");
+    graphs.emplace_back("График с ID 3158");
+    graphs.emplace_back("График с ID 10423");
+    graphs.emplace_back("График с ID 6442");
+    graphs.emplace_back("График с ID 85591");
+    graphs.emplace_back("График с ID 71234");
+    graphs.emplace_back("График с ID 4890");
+    graphs.emplace_back("График с ID 12678");
+    graphs.emplace_back("График с ID 50216");
+    graphs.emplace_back("График с ID 3984");
+    graphs.emplace_back("График с ID 17459");
+    graphs.emplace_back("График с ID 6654");
+    graphs.emplace_back("График с ID 2410");
+    graphs.emplace_back("График с ID 78192");
+    graphs.emplace_back("График с ID 5237");
+    graphs.emplace_back("График с ID 63190");
+    graphs.emplace_back("График с ID 8192");
+    graphs.emplace_back("График с ID 45920");
+    graphs.emplace_back("График с ID 1483");
+    graphs.emplace_back("График с ID 67514");
+    graphs.emplace_back("График с ID 3087");
+    graphs.emplace_back("График с ID 91156");
+    graphs.emplace_back("График с ID 15720");
+    graphs.emplace_back("График с ID 6894");
+    graphs.emplace_back("График с ID 82415");
+    graphs.emplace_back("График с ID 2379");
+    graphs.emplace_back("График с ID 56342");
+    graphs.emplace_back("График с ID 4980");
+    graphs.emplace_back("График с ID 7516");
+    graphs.emplace_back("График с ID 6124");
+    graphs.emplace_back("График с ID 95081");
+    graphs.emplace_back("График с ID 13456");
+    graphs.emplace_back("График с ID 8452");
+    graphs.emplace_back("График с ID 3907");
+    graphs.emplace_back("График с ID 71024");
+    graphs.emplace_back("График с ID 48109");
+
+}
+```
