@@ -2,7 +2,7 @@
 random_stend.cpp
 ```
 ### Генератор случайных стендов
-Ниже показано подключение библиотек, объявление переменных для TCP-сервера и переменных таймеров:
+Ниже показано **подключение библиотек**, **объявление переменных** для TCP-сервера и переменных таймеров:
 ```c++
 #include <Arduino.h>
 #include <vector>
@@ -43,4 +43,27 @@ unsigned long tn4_lim = 0;
 unsigned long tn5_lim = 1000;
 unsigned long tn6_lim = 100;
 double time1=0.0, time2=0.0, time3=0.0
+```
+Функция **initSPIFFS** нужна для инициализации файловой системы  ESP32 - после её объявления в мониторе порта могут выводиться русские буквы:
+```c++
+void initSPIFFS()  //инициализация файловой системы esp32
+
+{
+
+  if (!SPIFFS.begin(true)) //если не всё ок
+
+  {
+
+    Serial.println("An error has occurred while mounting SPIFFS"); //вывести сообщение об ошибке
+
+    delay(10000); //подождать 10 с.
+
+    ESP.restart(); //перезагрузить
+
+  }
+
+  Serial.println("SPIFFS mounted successfully"); //сообщение об успехе
+
+}
+
 ```
