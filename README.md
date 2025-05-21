@@ -1076,7 +1076,7 @@ group listafter(int i) {
     return g;
 }
 ```
-Функция **nullparams** возвращает группу с кнопкой сброса параметров до значений по умолчания:
+Функция **nullparams** возвращает группу с кнопкой сброса параметров до значений по умолчанию:
 ```c++
 group nullparams() {
     vector<el> elements;
@@ -1191,4 +1191,139 @@ group newDgraphic(vector<el> els, int i) {
     return g;
 }
 
+```
+В функции **initAllAndRun** с помощью описанных выше функций вектор групп **groups** заполняется элементами. Создаются: от 0 до 5 флажков, передающихся моментально, от 0 до 5 флажков, передающихся по старту - итого от 0 до 10 флажков, выбранных из 50 возможных; от 0 до 9 выходных неподчинённых надписей, выбранных из 50; аналогично с флажками, создаются от 0 до 10 списков, выбранных из 50; от 3 до 8 полос прокрутки (в том числе возможны и выходные полосы прокрутки), выбранных из 50; на основе полос прокрутки, передающихся моментально, создаётся график, обновляющийся постоянно, а таких полос может быть от 0 до 8; создаются 2 неродительских графика, включающих от 2 до 6 параметров, выбранных из значений, не выбранных полосами прокрутки, каждый. Если решить задачу комбинаторики, получится очень много вариантов различных стендов. А учитывая динамическое создание значений графиков и случайный выбор неподчинённых параметров, вариантов будет крайне много.
+```c++
+vector<group> groups; // Группы случайных значений
+// Для теста в Arduino реализуем 'main()' в виде функции initAllAndRun()
+void initAllAndRun() {
+    init_all();
+
+    group g = start_stop();
+    groups.push_back(g);
+
+    g = strcommand();
+    groups.push_back(g);
+
+    int k = round(rand() % 6);
+    int i = 1, i0 = 0;
+    for (i=1; i <= i0 + k; i++) {
+        g = flagmoment(i);
+        groups.push_back(g);
+    }
+
+    k = round(rand() % 6);
+    i0 = i - 1;
+    for (; i <= i0 + k; i++) {
+        g = flagafter(i);
+        groups.push_back(g);
+    }
+
+    k = round(rand() % 10);
+    i0 = i - 1;
+    for (; i <= i0 + k; i++) {
+        g = onecaption(i);
+        groups.push_back(g);
+    }
+
+    k = round(rand() % 6);
+    i0 = i - 1;
+    for (; i <= i0 + k; i++) {
+        g = listmoment(i);
+        groups.push_back(g);
+    }
+
+    k = round(rand() % 6);
+    i0 = i - 1;
+    for (; i <= i0 + k; i++) {
+        g = listafter(i);
+        groups.push_back(g);
+    }
+
+    g = nullparams();
+    groups.push_back(g);
+
+    k = 3+round(rand() % 6);
+    i0 = i - 1;
+    for (; i <= i0 + k; i++) {
+        g = newpolosa(i);
+        groups.push_back(g);
+    }
+
+    // Собираем "моменты" и "графики"
+    vector<el> moment;
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.when == "Моментально" && elm.type == e::polosa)
+                moment.push_back(elm);
+        }
+    }
+    int k0 = 1;
+    if (!moment.empty()) {
+        g = newgraphic(moment, k0++, 1);
+        groups.push_back(g);
+    }
+
+
+    // Создаём новые графики
+    // Параметры для новых графиков
+    vector<el> paramEls;
+    for (int i=0; i<2+rand()%5; i++) {
+        el e;
+        Polosa p = getAndRemoveRandomFromVector(polosas);
+        String s = p.name;
+        e.name = s;
+        e.max = p.max_val;
+        paramEls.push_back(e);
+    }
+    if (!paramEls.empty()) {
+        g = newgraphic(paramEls, k0++, 2);
+        groups.push_back(g);
+    }
+
+    paramEls.clear();
+    for (int i=0; i<2+rand()%5; i++) {
+        el e;
+        Polosa p = getAndRemoveRandomFromVector(polosas);
+        String s = p.name;
+        e.name = s;
+        e.max = p.max_val;
+        paramEls.push_back(e);
+    }
+    if (!paramEls.empty()) {
+        g = newDgraphic(paramEls, k0);
+        groups.push_back(g);
+    }
+
+    // Выводим "входные параметры"
+    Serial.println("Входные параметры:");
+    client.println("Входные параметры:");
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out != 1 && elm.in_end != 1) {
+                elm.print();
+            }
+        }
+    }
+
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out != 1 && elm.in_end == 1) {
+                elm.print();
+            }
+        }
+    }
+
+    // Далее вывод выходных
+    Serial.println("Выходные параметры:");
+    client.println("Выходные параметры:");
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out == 1)
+                elm.print();
+        }
+    }
+    Serial.println("По умолчанию:");
+    client.println("По умолчанию:");
+}
 ```
