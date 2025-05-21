@@ -2,6 +2,9 @@
 random_stend.cpp
 ```
 ### Генератор случайных стендов
+# Программа позаоляет сгенерировать случайный стенд - например, с такими параметрами:
+
+# Эта программа создана для независимого тестирования динамически наполняемого мобильного приложения
 Ниже показано **подключение библиотек**, **объявление переменных** для TCP-сервера и переменных таймеров:
 ```c++
 #include <Arduino.h>
@@ -1376,5 +1379,498 @@ void initAllAndRun() {
     }
     Serial.println("По умолчанию:");
     client.println("По умолчанию:");
+}
+```
+Функция **do_null** устанавливает значения по умолчанию:
+```c++
+void do_null(){ // Параметры по умолчанию
+    for (auto& g : groups)
+        for (auto& elm : g.elements)
+            if(elm.type!=button&&elm.type!=graphic&&elm.type!=graphicd&&elm.type!=str){
+                elm.value = elm.firstValue;
+                client.println(elm.name+" "+elm.value);
+                Serial.println(elm.name+" "+elm.value);
+            }
+}
+```
+Функция **check** работает со строками, приходящими от клиента - обрабатываются нажатия кнопок, изменения состояний флажков (предусмотрено получение значений 0 и 1), выборы значений списков, изменения значений полос прокрутки:
+```c++
+void check(String s){ // Анализ входной строки
+    int spaceIndex = s.indexOf(' '); // ищем позицию пробела
+    String s1, s2;
+    if (spaceIndex != -1) {
+        s1 = s.substring(0, spaceIndex); // первое слово
+        s2 = s.substring(spaceIndex + 1); // второе слово
+    } else {
+        // если пробела нет, то вся строка - одно слово
+        s1 = s;
+        s2 = "";
+    }
+    //--------------------------------------
+    //--------------------------------------
+    // ПОЛУЧЕНИЕ ЗНАЧЕНИЙ ОТ КЛИЕНТА
+    //--------------------------------------
+    //--------------------------------------
+    
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.name==s1) {
+                //ЕСЛИ ТИП ЭЛЕМЕНТА КНОПКА
+                client.println(String(elm.type));
+//----------------------------------------
+                if(elm.type== button){
+                    if(elm.name=="Старт"){
+                        process = 1; 
+                        Serial.println("Процесс запущен");
+                        client.println("Старт");
+                    }
+                    else if(elm.name == "Стоп"){
+                        process = 0;  
+                        Serial.println("Процесс остановлен"); 
+                        client.println("Стоп");
+                    }
+                    else if(elm.name =="Выполнить"){
+                       // Тут якобы выполняется команда
+                        Serial.println("Выполнена команда "+s2);        
+                    }
+                    else if(elm.name=="Сброс_параметров"){
+                        // СБРОС ПАРАМЕТРОВ ДО УМОЛЧАНИЯ
+                        do_null();
+                        Serial.println("Установлены параметры по умолчанию");  
+                    }
+                }         
+//----------------------------------------
+//----------------------------------------
+                //ЕСЛИ ТИП ЭЛЕМЕНТА ФЛАЖОК
+                if(elm.type== checkbox){
+                    String s3 = elm.subs[0];
+                    // Поиск подчиненного элемента
+                    String s01, s02, s0;
+                    for (auto& g2 : groups)
+                        for (auto& elm2 : g2.elements) 
+                        if (elm2.name==s3){
+                            s01 = elm2.subs[1];
+                            s02 = elm2.subs[0];
+                            if(s2.startsWith("0")) s0 = s01; 
+                            else s0 = s02;
+                            // Если немоментально, копирование из elm должно производиться по старту!!!
+                            if(elm.when=="Моментально"){
+                            elm2.value = s0;
+                            client.println(elm2.name+" "+elm2.value);
+                            Serial.println(elm2.name+" "+elm2.value);
+                            }
+                            elm.value = s0;
+                        }
+                }                 
+//----------------------------------------
+//----------------------------------------
+                //ЕСЛИ ТИП ЭЛЕМЕНТА СПИСОК
+                if(elm.type== list){
+                    String s3 = elm.subs[0];
+                    
+                    String s0 = s2;
+                    if(elm.action=="ЗначениеКод")
+                    for (int i=0; i<elm.zn.size(); i++) {
+                     if(s2.startsWith(String(elm.kods[i].c_str())))
+                     s0 = String(elm.zn[i].c_str());
+                    }
+                    
+                    // Поиск подчиненного элемента
+                    for (auto& g2 : groups)
+                        for (auto& elm2 : g2.elements){
+                            if(elm2.name == s3){
+                            // Если немоментально, копирование из elm должно производиться по старту!!!
+                                if(elm.when=="Моментально"){
+                                elm2.value = s0;
+                                client.println(elm2.name+" "+elm2.value);
+                                Serial.println(elm2.name+" "+elm2.value);
+                                }
+                                elm.value = s0;
+                            }
+                    }
+                }          
+//----------------------------------------
+//----------------------------------------
+                //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
+                if(elm.type== polosa){
+                    elm.value = s2;
+                }      
+                // РОДИТЕЛЬСКИЕ ГРАФИКИ САМИ ОБНАРУЖАТ ПОЛОСУ ПОСТОЯННО ИЛИ В ПРОЦЕССЕ
+//----------------------------------------
+//----------------------------------------
+                
+                
+                
+                
+                
+            }
+        }
+    }
+}
+```
+В **setup** происходит инициализация файловой системы, генератора случайных чисел и веб-сервера.
+```c++
+void setup() {
+    Serial.begin(115200); //открываем монитор вывода
+    uint32_t seed = esp_random();
+    srand(seed);
+    initSPIFFS(); //инициализируем файловую систему esp32
+    
+    
+    Serial.println("\n\n\n");
+    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Готово!" : "Ошибка!");
+    Serial.println(WiFi.softAP(ssid,password, 1, 0, 1) ? ("Открыта сеть: "+local_IP) : ("Ошибка!")); 
+    server.begin(); // запуск сервера
+    Serial.println(ssid);
+    Serial.println(password);
+}
+```
+В **loop** происходит соединение с клиентом, инициализация вектора элементов, реализуется получение строки от клиента, передача данных клиенту:
+● Постоянно передаются: работаающие постоянно неподчинённые выходные надписи, неподчинённые выходные полосы, родительский график (в данной системе он работает постоянно).
+● В конце передаются: неподчинённые выходные надписи, печатающиеся в конце, неподчинённые выходные полосы, печатающиеся в конце.
+В процессе передаются: неродительские графики (в данной системе они работают в процессе), неподчинённые выходные надписи и полосы прокрутки, печатающиеся в процессе.
+● По старту устанавливаются надписи, соответствующие родительским флажкам и спискам, передающимся по старту, происходит обнуление значений для графиков и обнуление таймера для графиков.
+```c++
+void loop() {
+    client = server.available();
+    if (client) {
+        Serial.println("Клиент подключился");
+
+        //Инициализация
+        Serial.println("\n\n\n");
+        init_all(); // Инициализация рандомайзера
+        initAllAndRun(); // вызов логики
+        for (auto& g : groups) 
+            for (auto& elm : g.elements)
+                if(elm.type==graphic||elm.type==graphicd){
+                    int flag=0;
+                    // Не родительский
+                    for (auto& g2 : groups)
+                        for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm.subs) if(sub==elm2.name) flag++;
+                    if(flag==0)
+                        for (auto& sub : elm.subs){
+                            if(sub[sub.length()-1]=='%') systemControllers.push_back(SystemController(100.0));
+                            else {
+                                int temp = static_cast<int>(round(elm.maxParam-50));
+                                systemControllers.push_back(SystemController((50+rand()%temp)*1.0));
+                            }
+                        }
+                }
+
+        tn1 = millis();
+        tn1_lim = (5+rand()%9)*500;
+        tn2 = millis();
+        tn2_lim = (5+rand()%9)*500;
+        tn3 = millis();
+        tn3_lim = (5+rand()%9)*500;
+        tn4 = millis();
+        tn4_lim = (5+rand()%9)*500;
+        tn5 = millis();
+        tn6 = millis();
+        time1 = 0.0;
+        time2 = 0.0;
+        time3 = 0.0;
+        do_null();
+        
+        String requestData = "";
+        while (client.connected()) {
+            if (client.available()) {
+                start: //Метка для goto
+                while (client.available()) {
+                    char c = client.read();
+                    requestData += c; 
+                }
+                Serial.println(requestData);
+                // Найдем последний символ новой строки
+                int lastNewLineIndex = requestData.lastIndexOf('\n');
+                // Теперь найдем индексы, чтобы вырезать последнюю непустую строку
+                int  secondLastNewLineIndex = requestData.lastIndexOf('\n', lastNewLineIndex - 1);
+                
+                // Проверяем, что между строками есть данные
+                if (lastNewLineIndex != -1 && secondLastNewLineIndex != -1) {
+                    String lastLine = requestData.substring(secondLastNewLineIndex + 1, lastNewLineIndex);
+                    // Удаляем последнюю строку из requestData, чтобы избежать дублирования
+                    requestData = requestData.substring(0, lastNewLineIndex + 1); // Сохраняем до последней новой строки
+                    
+                    
+                    
+                    // ОПРЕДЕЛЕНИЕ ЭЛЕМЕНТА И ЧТО С НИМ ДЕЛАТЬ
+                    String s = lastLine.c_str(); // исходная строка
+                    check(s);
+                    
+                    
+                }
+                else{ // Если строка пока одна
+                    String s = requestData.c_str(); // исходная строка
+                    check(s);
+                    
+                }
+            }
+
+
+    //--------------------------------------
+    //--------------------------------------
+    // ПЕРЕДАЧА ДАННЫХ КЛИЕНТУ
+    //--------------------------------------
+    //--------------------------------------
+    
+//----------------------------------------
+// ПОСТОЯННО
+
+                // Надписи Выходные
+                // Неподчиненные Постоянно
+            if(millis()-tn1>=tn1_lim){
+                tn1 = millis();
+                tn1_lim = (5+rand()%9)*500;
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
+                        if((elm.type== caption)&&elm.when!="Постоянно"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                int n = elm.subs.size();
+                                int m = rand()%n;
+                                String s0 = elm.subs[m];
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                
+            }
+//----------------------------------------
+//----------------------------------------
+                // Полосы Выходные
+                // Неподчиненные Постоянно
+            if(millis()-tn3>=tn3_lim){
+                tn3 = millis();
+                tn3_lim = (5+rand()%9)*500;
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
+                        if((elm.type== polosa_out)&&elm.when!="Постоянно"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                double min=elm.min, max=elm.max, step=elm.step;
+                                int n = (max-min)/step;
+                                double m = (rand()%n)*step+min;
+                                String s0 = String(m);
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                
+            }
+//----------------------------------------
+                // Графики
+                // Постоянно (они у нас только родительские)
+            if(millis()-tn5>=tn5_lim){
+                time1 += tn5_lim/1000;
+                tn5 = millis();
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements)
+                      if(elm.type==graphic&&elm.when=="Постоянно"){
+                            // Просто выписываем значения для графика клиенту
+                            String s0;
+                            s0 = elm.name + " " + String(time1);
+                            for (auto& sub : elm.subs){
+                                for (auto& g2 : groups)
+                                    for (auto& elm2 : g2.elements) 
+                                        if(sub==elm2.name) s0+=" "+elm2.value;
+                            }
+                            Serial.println(s0);
+                            client.println(s0);
+                      }
+                
+            }
+//----------------------------------------
+// В КОНЦЕ
+            if(process==0){
+                process = -1;
+                // Неподчиненная выходная НАДПИСЬ
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
+                        if((elm.type== caption)&&elm.when!="ВКонце"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                int n = elm.subs.size();
+                                int m = rand()%n;
+                                String s0 = elm.subs[m];
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                // Неподчинённая выходная ПОЛОСА
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
+                        if((elm.type== polosa_out)&&elm.when!="ВКонце"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                double min=elm.min, max=elm.max, step=elm.step;
+                                int n = (max-min)/step;
+                                double m = (rand()%n)*step+min;
+                                String s0 = String(m);
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                
+            }
+//----------------------------------------
+// ПРОЦЕСС ЗАПУЩЕН
+            if (process>=1){
+                if (client.available()){
+                    goto start;
+                }
+ //----------------------------------------
+                // В ПРОЦЕССЕ
+                
+                // Графики неродительские (у нас они только в процессе)
+                if(millis()-tn6>tn6_lim){
+                    int k = 0;
+                    tn6 = millis();
+                    for (auto& g : groups) for (auto& elm : g.elements)
+                        if((elm.type==graphic||elm.type==graphicd)&&elm.when=="ВПроцессе"){
+                            int f = 0;
+                            String s0 = elm.name + " ";
+                            for (auto& sub : elm.subs){
+                                float m = systemControllers[k].update();
+                                if(f==0){
+                                    f = -1;
+                                    s0 += String(systemControllers[k].get_time())+" ";
+                                    if(elm.type==graphicd) s0 += String(systemControllers[k].get_time())+" ";
+                                }
+                                s0 += String(m)+" ";
+                                k++;
+                            }
+                            Serial.println(s0);
+                            client.println(s0);
+                        }
+                }
+                
+                // Надписи Выходные
+                // Неподчиненные ВПроцессе
+            if(millis()-tn2>=tn2_lim){
+                tn2 = millis();
+                tn2_lim = (5+rand()%9)*500;
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
+                        if((elm.type== caption)&&elm.when!="ВПроцессе"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                int n = elm.subs.size();
+                                int m = rand()%n;
+                                String s0 = elm.subs[m];
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                
+            }
+            //----------------------------------------
+                // Полосы Выходные
+                // Неподчиненные ВПроцессе
+            if(millis()-tn4>=tn4_lim){
+                tn4 = millis();
+                tn4_lim = (5+rand()%9)*500;
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
+                        if((elm.type== polosa_out)&&elm.when!="ВПроцессе"){
+                            int flag=0;
+                            // Не подчинено
+                            for (auto& g2 : groups)
+                            for (auto& elm2 : g2.elements) 
+                            for (auto& sub : elm2.subs) if(sub==elm.name) flag = 1;
+                            
+                            if(flag==0){
+                                double min=elm.min, max=elm.max, step=elm.step;
+                                int n = (max-min)/step;
+                                double m = (rand()%n)*step+min;
+                                String s0 = String(m);
+                                elm.value = s0;
+                                Serial.println(elm.name+" "+elm.value);
+                                client.println(elm.name+" "+elm.value);
+                            }
+                        }
+                }
+                
+            }
+//----------------------------------------
+//----------------------------------------
+                // Установка парметров 
+                // ПО СТАРТУ
+                if(process==1){
+//----------------------------------------
+                for (auto& g : groups) 
+                    for (auto& elm : g.elements){
+                        //ЕСЛИ ТИП ЭЛЕМЕНТА ФЛАЖОК или СПИСОК
+                        if((elm.type== checkbox||elm.type==list)&&elm.when!="Моментально"){
+                            String s = elm.subs[0];
+                            // Поиск подчиненного элемента
+                            for (auto& g2 : groups)
+                                for (auto& elm2 : g2.elements) 
+                                if (elm2.name==s){
+                                    elm2.value = elm.value;
+                                    Serial.println(elm2.name+" "+elm2.value);
+                                    client.println(elm2.name+" "+elm2.value);
+                                }
+                                // Копируем из записанного в родительский элемент значения
+                        }
+                        
+                        
+                        
+                    }
+                // Обнуление для графиков
+                for(auto &c: systemControllers)
+                    c.begin();
+                tn6 = millis();
+//----------------------------------------
+                    process = 2;
+                }                       
+            }
+        }
+    
+        Serial.println("Клиент отключился");
+        requestData = ""; 
+    }
 }
 ```
