@@ -1204,8 +1204,6 @@ group newDgraphic(vector<el> els, int i) {
 ```
 В функции **initAllAndRun** с помощью описанных выше функций вектор групп **groups** заполняется элементами. Создаются: от 1 до 4 флажков, передающихся моментально, от 1 до 4 флажков, передающихся по старту - итого от 2 до 8 флажков, выбранных из 50 возможных; от 1 до 4 выходных неподчинённых надписей, выбранных из 50; аналогично с флажками, создаются от 2 до 8 списков, выбранных из 50; от 1 до 4 полос прокрутки (в том числе возможны и выходные полосы прокрутки), выбранных из 50; на основе полос прокрутки, передающихся моментально, создаётся график, обновляющийся постоянно, а таких полос может быть от 1 до 4; создаются 2 неродительских графика, включающих от 1 до 4 параметров, выбранных из значений, не выбранных полосами прокрутки, каждый. Если решить задачу комбинаторики, получится очень много вариантов различных стендов. А учитывая динамическое создание значений графиков и случайный выбор неподчинённых параметров, вариантов будет крайне много.
 
-Для оценки количества возможных вариантов стендов, создаваемых в функции initAllAndRun, необходимо учесть все возможные комбинации выбора элементов из множества 50 вариантов. В задаче указано, что каждый тип элементов выбирается в определенном диапазоне, и эти выборы являются независимыми. В результате, общее число вариантов — это произведение суммы возможных вариантов для каждого типа элементов. Для точных расчетов я использую конкретные значения биномиальных коэффициентов, чтобы определить сумму вариантов для каждого диапазона.
-Начнем с напоминания значений биномиальных коэффициентов для $k$ от 0 до 10, так как они понадобятся для вычислений.
 
 ```c++
 vector<group> groups; // Группы случайных значений
@@ -1219,35 +1217,35 @@ void initAllAndRun() {
     g = strcommand();
     groups.push_back(g);
 
-    int k = round(rand() % 6);
+    int k = 1+round(rand() % 4);
     int i = 1, i0 = 0;
     for (i=1; i <= i0 + k; i++) {
         g = flagmoment(i);
         groups.push_back(g);
     }
 
-    k = round(rand() % 6);
+    k = 1+round(rand() % 4);
     i0 = i - 1;
     for (; i <= i0 + k; i++) {
         g = flagafter(i);
         groups.push_back(g);
     }
 
-    k = round(rand() % 10);
+    k = 1+round(rand() % 4);
     i0 = i - 1;
     for (; i <= i0 + k; i++) {
         g = onecaption(i);
         groups.push_back(g);
     }
 
-    k = round(rand() % 6);
+    k = 1+round(rand() % 4);
     i0 = i - 1;
     for (; i <= i0 + k; i++) {
         g = listmoment(i);
         groups.push_back(g);
     }
 
-    k = round(rand() % 6);
+    k = 1+round(rand() % 4);
     i0 = i - 1;
     for (; i <= i0 + k; i++) {
         g = listafter(i);
@@ -1257,7 +1255,7 @@ void initAllAndRun() {
     g = nullparams();
     groups.push_back(g);
 
-    k = 3+round(rand() % 6);
+    k = 1+round(rand() % 4);
     i0 = i - 1;
     for (; i <= i0 + k; i++) {
         g = newpolosa(i);
@@ -1282,7 +1280,7 @@ void initAllAndRun() {
     // Создаём новые графики
     // Параметры для новых графиков
     vector<el> paramEls;
-    for (int i=0; i<2+rand()%5; i++) {
+    for (int i=0; i<1+rand()%4; i++) {
         el e;
         Polosa p = getAndRemoveRandomFromVector(polosas);
         String s = p.name;
@@ -1296,7 +1294,7 @@ void initAllAndRun() {
     }
 
     paramEls.clear();
-    for (int i=0; i<2+rand()%5; i++) {
+    for (int i=0; i<1+rand()%4; i++) {
         el e;
         Polosa p = getAndRemoveRandomFromVector(polosas);
         String s = p.name;
@@ -1340,17 +1338,44 @@ void initAllAndRun() {
     Serial.println("По умолчанию:");
     client.println("По умолчанию:");
 }
+
+    
 ```
 Функция **do_null** устанавливает значения по умолчанию:
 ```c++
 void do_null(){ // Параметры по умолчанию
-    for (auto& g : groups)
-        for (auto& elm : g.elements)
-            if(elm.type!=button&&elm.type!=graphic&&elm.type!=graphicd&&elm.type!=str){
-                elm.value = elm.firstValue;
-                client.println(elm.name+" "+elm.value);
-                Serial.println(elm.name+" "+elm.value);
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out != 1 && elm.in_end != 1) {
+                if(elm.type!=button&&elm.type!=graphic&&elm.type!=graphicd&&elm.type!=str){
+                    elm.value = elm.firstValue;
+                    client.println(elm.name+" "+elm.value);
+                    Serial.println(elm.name+" "+elm.value);
+                }
             }
+        }
+    }
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out != 1 && elm.in_end == 1) {
+                if(elm.type!=button&&elm.type!=graphic&&elm.type!=graphicd&&elm.type!=str){
+                    elm.value = elm.firstValue;
+                    client.println(elm.name+" "+elm.value);
+                    Serial.println(elm.name+" "+elm.value);
+                }
+            }
+        }
+    }
+    for (auto& g : groups) {
+        for (auto& elm : g.elements) {
+            if (elm.is_out == 1)
+                if(elm.type!=button&&elm.type!=graphic&&elm.type!=graphicd&&elm.type!=str){
+                    elm.value = elm.firstValue;
+                    client.println(elm.name+" "+elm.value);
+                    Serial.println(elm.name+" "+elm.value);
+                }
+        }
+    }
 }
 ```
 Функция **check** работает со строками, приходящими от клиента - обрабатываются нажатия кнопок, изменения состояний флажков (предусмотрено получение значений 0 и 1), выборы значений списков, изменения значений полос прокрутки:
@@ -1382,7 +1407,12 @@ void check(String s){ // Анализ входной строки
                     if(elm.name=="Старт"){
                         process = 1; 
                         Serial.println("Процесс запущен");
-                        client.println("Старт");
+                        for (auto& g : groups) 
+                            for (auto& elm : g.elements)
+                            if((elm.type==graphic||elm.type==graphicd)&&elm.when!="Постоянно"){
+                                client.println(elm.name+" null");
+                                Serial.println(elm.name+" null");
+                            }
                     }
                     else if(elm.name == "Стоп"){
                         process = 0;  
@@ -1419,7 +1449,7 @@ void check(String s){ // Анализ входной строки
                             client.println(elm2.name+" "+elm2.value);
                             Serial.println(elm2.name+" "+elm2.value);
                             }
-                            elm.value = s0;
+                            elm2.value = s0;
                         }
                 }                 
 //----------------------------------------
@@ -1445,7 +1475,7 @@ void check(String s){ // Анализ входной строки
                                 client.println(elm2.name+" "+elm2.value);
                                 Serial.println(elm2.name+" "+elm2.value);
                                 }
-                                elm.value = s0;
+                                elm2.value = s0;
                             }
                     }
                 }          
@@ -1495,7 +1525,7 @@ void loop() {
     client = server.available();
     if (client) {
         Serial.println("Клиент подключился");
-
+        process = -1;
         //Инициализация
         Serial.println("\n\n\n");
         init_all(); // Инициализация рандомайзера
@@ -1512,8 +1542,7 @@ void loop() {
                         for (auto& sub : elm.subs){
                             if(sub[sub.length()-1]=='%') systemControllers.push_back(SystemController(100.0));
                             else {
-                                int temp = static_cast<int>(round(elm.maxParam-50));
-                                systemControllers.push_back(SystemController((50+rand()%temp)*1.0));
+                                systemControllers.push_back(elm.maxParam);
                             }
                         }
                 }
@@ -1532,16 +1561,17 @@ void loop() {
         time2 = 0.0;
         time3 = 0.0;
         do_null();
+        Serial.println("Старт");
         
         String requestData = "";
         while (client.connected()) {
+            
             if (client.available()) {
                 start: //Метка для goto
                 while (client.available()) {
                     char c = client.read();
                     requestData += c; 
                 }
-                Serial.println(requestData);
                 // Найдем последний символ новой строки
                 int lastNewLineIndex = requestData.lastIndexOf('\n');
                 // Теперь найдем индексы, чтобы вырезать последнюю непустую строку
@@ -1557,17 +1587,19 @@ void loop() {
                     
                     // ОПРЕДЕЛЕНИЕ ЭЛЕМЕНТА И ЧТО С НИМ ДЕЛАТЬ
                     String s = lastLine.c_str(); // исходная строка
+                    Serial.println(s);
                     check(s);
                     
                     
                 }
                 else{ // Если строка пока одна
                     String s = requestData.c_str(); // исходная строка
+                    Serial.println(s);
                     check(s);
                     
                 }
             }
-
+            
 
     //--------------------------------------
     //--------------------------------------
@@ -1586,7 +1618,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
-                        if((elm.type== caption)&&elm.when!="Постоянно"){
+                        if((elm.type== caption)&&elm.when=="Постоянно"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1615,7 +1647,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
-                        if((elm.type== polosa_out)&&elm.when!="Постоянно"){
+                        if((elm.type== polosa_out)&&elm.when=="Постоянно"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1639,7 +1671,7 @@ void loop() {
                 // Графики
                 // Постоянно (они у нас только родительские)
             if(millis()-tn5>=tn5_lim){
-                time1 += tn5_lim/1000;
+                time1 += tn5_lim/1000.0;
                 tn5 = millis();
                 for (auto& g : groups) 
                     for (auto& elm : g.elements)
@@ -1665,7 +1697,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
-                        if((elm.type== caption)&&elm.when!="ВКонце"){
+                        if((elm.type== caption)&&elm.when=="ВКонце"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1686,7 +1718,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
-                        if((elm.type== polosa_out)&&elm.when!="ВКонце"){
+                        if((elm.type== polosa_out)&&elm.when=="ВКонце"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1746,7 +1778,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА НАДПИСЬ
-                        if((elm.type== caption)&&elm.when!="ВПроцессе"){
+                        if((elm.type== caption)&&elm.when=="ВПроцессе"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1758,9 +1790,9 @@ void loop() {
                                 int m = rand()%n;
                                 String s0 = elm.subs[m];
                                 elm.value = s0;
-                                Serial.println(elm.name+" "+elm.value);
-                                client.println(elm.name+" "+elm.value);
                             }
+                            Serial.println(elm.name+" "+elm.value);
+                            client.println(elm.name+" "+elm.value);
                         }
                 }
                 
@@ -1774,7 +1806,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА ПОЛОСА
-                        if((elm.type== polosa_out)&&elm.when!="ВПроцессе"){
+                        if((elm.type== polosa_out)&&elm.when=="ВПроцессе"){
                             int flag=0;
                             // Не подчинено
                             for (auto& g2 : groups)
@@ -1787,9 +1819,9 @@ void loop() {
                                 double m = (rand()%n)*step+min;
                                 String s0 = String(m);
                                 elm.value = s0;
-                                Serial.println(elm.name+" "+elm.value);
-                                client.println(elm.name+" "+elm.value);
                             }
+                            Serial.println(elm.name+" "+elm.value);
+                            client.println(elm.name+" "+elm.value);
                         }
                 }
                 
@@ -1803,7 +1835,7 @@ void loop() {
                 for (auto& g : groups) 
                     for (auto& elm : g.elements){
                         //ЕСЛИ ТИП ЭЛЕМЕНТА ФЛАЖОК или СПИСОК
-                        if((elm.type== checkbox||elm.type==list)&&elm.when!="Моментально"){
+                        if((elm.type== checkbox||elm.type==list)&&elm.when=="Моментально"){
                             String s = elm.subs[0];
                             // Поиск подчиненного элемента
                             for (auto& g2 : groups)
@@ -1833,4 +1865,5 @@ void loop() {
         requestData = ""; 
     }
 }
+
 ```
