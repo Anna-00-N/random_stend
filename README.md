@@ -6,7 +6,7 @@ random_stend.cpp
 ![image](./1.jpg)
 ![image](./2.jpg)
 ![image](./3.jpg)
-Параметры с end должны показываться после всех остальных входных элементов, параметры out - выходные параметры.
+Параметры с end должны показываться после всех остальных входных элементов, параметры out - выходные параметры, параметры inyerval - доверительные интервалы для выходящих полос прокрутки и значений с графиков.
 ### Эта программа создана для независимого тестирования динамически наполняемого мобильного приложения
 Ниже показано **подключение библиотек**, **объявление переменных** для TCP-сервера и переменных таймеров:
 ```c++
@@ -731,7 +731,7 @@ T getAndRemoveRandomFromVector(vector<T>& vec) {
     return t0;
 }
 ```
-В перечислении **e** обозначены типы элементов, класс **el** - общий для всех элементов, позволяет напечатать информацию об элементе каждого типа:
+В перечислении **e** обозначены типы элементов, класс **el** - общий для всех элементов, позволяет напечатать информацию об элементе каждого типа, также здесь формируются доверительных интервалы для значений с выходных полос прокрутки и графиков:
 ```c++
 // Перечисление типов элементов UI
 enum e { button, checkbox, list, str, polosa, caption, graphic, graphicd, polosa_out };
@@ -817,6 +817,12 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                double min_int = min+(max-min)*(rand()%50/100.0);
+                double max_int = min_int+(max-min_int)*((50+rand()%50)/100.0);
+                String s2 = "interval " + name + " " + String(min_int) + " " + String(max_int);
+                Serial.println(s2);
+                client.println(s2);
                 break;
             }
             case graphic: {
@@ -827,6 +833,15 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                for (int i=0; i<subs.size(); i++) {
+                    String n = subs[i].c_str();
+                    double min_int = maxParam*(rand()%50/100.0);
+                    double max_int = min_int+(maxParam-min_int)*((50+rand()%50)/100.0);
+                    String s2 = "interval " + n + " " + String(min_int) + " " + String(max_int);
+                    Serial.println(s2);
+                    client.println(s2);
+                }
                 break;
             }
             case graphicd: {
@@ -837,6 +852,15 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                for (int i=0; i<subs.size(); i++) {
+                    String n = subs[i].c_str();
+                    double min_int = maxParam*(rand()%50/100.0);
+                    double max_int = min_int+(maxParam-min_int)*((50+rand()%50)/100.0);
+                    String s2 = "interval " + n + " " + String(min_int) + " " + String(max_int);
+                    Serial.println(s2);
+                    client.println(s2);
+                }
                 break;
             }
             default:
