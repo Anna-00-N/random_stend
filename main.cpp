@@ -14,6 +14,7 @@ using namespace std;
 int process = -1; // Маркер запуска и остановки процесса
 
 WiFiClient client; //Объявляем объект клиента для установки связи с сервером
+bool client_active = false; // флаг, указывающий, активен ли клиент
 const char *ssid = "ESP32"; //имя сервера
 const char *password = "12345678"; //пароль сервера
 IPAddress local_IP(192,168,4,22); //стат.данные для раздачи
@@ -792,6 +793,12 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                double min_int = min+(max-min)*(rand()%50/100.0);
+                double max_int = min_int+(max-min_int)*((50+rand()%50)/100.0);
+                String s2 = "interval " + name + " " + String(min_int) + " " + String(max_int);
+                Serial.println(s2);
+                client.println(s2);
                 break;
             }
             case graphic: {
@@ -802,6 +809,15 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                for (int i=0; i<subs.size(); i++) {
+                    String n = subs[i].c_str();
+                    double min_int = maxParam*(rand()%50/100.0);
+                    double max_int = min_int+(maxParam-min_int)*((50+rand()%50)/100.0);
+                    String s2 = "interval " + n + " " + String(min_int) + " " + String(max_int);
+                    Serial.println(s2);
+                    client.println(s2);
+                }
                 break;
             }
             case graphicd: {
@@ -812,6 +828,15 @@ public:
                 s += (in_end ? " end" : "");
                 Serial.println(s);
                 client.println(s);
+                // Добавление доверительного интервала
+                for (int i=0; i<subs.size(); i++) {
+                    String n = subs[i].c_str();
+                    double min_int = maxParam*(rand()%50/100.0);
+                    double max_int = min_int+(maxParam-min_int)*((50+rand()%50)/100.0);
+                    String s2 = "interval " + n + " " + String(min_int) + " " + String(max_int);
+                    Serial.println(s2);
+                    client.println(s2);
+                }
                 break;
             }
             default:
@@ -1802,8 +1827,6 @@ void loop() {
                 }                       
             }
         }
-    
         Serial.println("Клиент отключился");
-        requestData = ""; 
     }
 }
